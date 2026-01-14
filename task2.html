@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Live Chat</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #4268b8;
+        color: #e5e7eb;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+      .chat {
+        width: 100%;
+        max-width: 600px;
+        background: #051b4b;
+        border-radius: 12px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 8px 20px rgba(34, 35, 53, 0.4);
+      }
+      .chat__header {
+        padding: 12px;
+        background: #1f2937;
+        font-weight: bold;
+        text-align: center;
+      }
+      .chat__messages {
+        flex: 1;
+        padding: 12px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .msg {
+        max-width: 70%;
+        padding: 10px;
+        border-radius: 10px;
+        line-height: 1.4;
+      }
+      .msg.me {
+        align-self: flex-end;
+        background: #2563eb;
+        color: white;
+      }
+      .msg.bot {
+        align-self: flex-start;
+        background: #374151;
+        color: #f9fafb;
+      }
+      .chat__input {
+        display: flex;
+        border-top: 1px solid #1f2937;
+      }
+      .chat__textbox {
+        flex: 1;
+        padding: 12px;
+        background: #0f172a;
+        color: #e5e7eb;
+      }
+      .chat__send {
+        padding: 12px 16px;
+        background: #ebfa1a;
+        color: #0f172a;
+        font-weight: bold;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="chat">
+      <div class="chat__header">Chat Room</div>
+      <div class="chat__messages" id="messages"></div>
+      <form class="chat__input" id="form">
+        <input
+          id="input"
+          class="chat__textbox"
+          type="text"
+          placeholder="Type a message…"
+          autocomplete="off"
+          required
+        />
+        <button class="chat__send" type="submit">Send</button>
+      </form>
+    </div>
+    <script>
+      const messagesEl = document.getElementById("messages");
+      const formEl = document.getElementById("form");
+      const inputEl = document.getElementById("input");
+      function addMessage(text, who) {
+        const div = document.createElement("div");
+        div.className = "msg " + who;
+        div.textContent = text;
+        messagesEl.appendChild(div);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }
+      function botReply(userText) {
+        const replies = [
+          "Got it!",
+          "Interesting…",
+          "Tell me more.",
+          "I hear you.",
+          "Nice thought!",
+        ];
+        const tip = replies[Math.floor(Math.random() * replies.length)];
+        return tip + " You said: " + userText;
+      }
+      formEl.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const text = inputEl.value.trim();
+        if (!text) return;
+        addMessage(text, "me");
+        inputEl.value = "";
+        setTimeout(() => {
+          addMessage(botReply(text), "bot");
+        }, 600);
+      });
+      addMessage("Welcome!", "bot");
+    </script>
+  </body>
+</html>
