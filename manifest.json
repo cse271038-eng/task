@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "FocusFlow — Time & Productivity",
+  "version": "1.0.0",
+  "description": "Track time by website, classify productivity, and view weekly analytics.",
+  "permissions": ["tabs", "storage", "idle"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "FocusFlow Stats",
+    "default_popup": "popup.html"
+  },
+  "options_page": "options.html",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "dashboard.html",
+        "dashboard.js",
+        "dashboard.css",
+        "chart.min.js"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

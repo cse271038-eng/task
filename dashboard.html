@@ -1,0 +1,62 @@
+<!-- dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>FocusFlow — Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css" />
+  </head>
+  <body>
+    <header>
+      <h1>FocusFlow — Time & Productivity</h1>
+      <nav>
+        <a href="#" id="refresh">Refresh</a>
+        <a href="options.html" target="_blank">Settings</a>
+      </nav>
+    </header>
+
+    <section class="summary">
+      <div class="card">
+        <h2>Today's Productivity</h2>
+        <div class="row">
+          <span>Productive</span><strong id="todayProd"></strong>
+        </div>
+        <div class="row">
+          <span>Unproductive</span><strong id="todayUnprod"></strong>
+        </div>
+        <div class="row">
+          <span>Total</span><strong id="todayTotal"></strong>
+        </div>
+        <div class="row">
+          <span>Focus Score</span><strong id="todayScore"></strong>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Top Sites Today</h2>
+        <ul id="topSites"></ul>
+      </div>
+    </section>
+
+    <section class="charts">
+      <div class="card">
+        <h2>Weekly Breakdown</h2>
+        <canvas id="weeklyBar"></canvas>
+      </div>
+      <div class="card">
+        <h2>Category Split (This Week)</h2>
+        <canvas id="weeklyPie"></canvas>
+      </div>
+    </section>
+
+    <section class="report">
+      <div class="card">
+        <h2>Weekly Productivity Report</h2>
+        <div id="weeklyReport"></div>
+      </div>
+    </section>
+
+    <script src="chart.min.js"></script>
+    <script src="dashboard.js"></script>
+  </body>
+</html>

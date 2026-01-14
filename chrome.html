@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>FocusFlow — Time & Productivity</title>
+    <style>
+      :root {
+        --bg: #0f172a;
+        --card: #111827;
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --accent: #22c55e;
+        --danger: #ef4444;
+        --border: #1f2937;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        background: linear-gradient(180deg, #0b1220, #0f172a);
+        color: var(--text);
+      }
+      header {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      header h1 {
+        font-size: 16px;
+        margin: 0;
+        letter-spacing: 0.3px;
+      }
+      nav {
+        display: flex;
+        gap: 8px;
+      }
+      nav button {
+        background: transparent;
+        color: var(--text);
+        border: 1px solid var(--border);
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      nav button.active {
+        background: var(--card);
+        border-color: var(--accent);
+      }
+      main {
+        padding: 16px;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      .card {
+        background: rgba(17, 24, 39, 0.7);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+        backdrop-filter: blur(6px);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      .stat {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .stat .value {
+        font-size: 20px;
+        font-weight: 600;
+      }
+      .stat .label {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .list {
+        margin-top: 8px;
+      }
+      .list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px dashed var(--border);
+      }
+      .list-item:last-child {
+        border-bottom: none;
+      }
+      .badge {
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        border: 1px solid var(--border);
+        color: var(--muted);
+      }
+      .badge.good {
+        color: #16a34a;
+        border-color: #16a34a22;
+        background: #16a34a11;
+      }
+      .badge.bad {
+        color: #ef4444;
+        border-color: #ef444422;
+        background: #ef444411;
+      }
+      .controls {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .controls input,
+      .controls textarea,
+      .controls select {
+        background: #0b1220;
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px;
+        width: 100%;
+      }
+      .controls textarea {
+        min-height: 80px;
+      }
+      .controls button {
+        background: #0b1220;
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+      .controls button.primary {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .muted {
+        color: var(--muted);
+      }
+      canvas {
+        background: #0b1220;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+      }
+      footer {
+        padding: 12px 16px;
+        color: var(--muted);
+        font-size: 12px;
+        text-align: center;
+      }
+      @media (max-width: 720px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <header>
+      <h1>FocusFlow — Time & Productivity</h1>
+      <nav>
+        <button data-view="overview" class="active">Overview</button>
+        <button data-view="dashboard">Dashboard</button>
+        <button data-view="settings">Settings</button>
+      </nav>
+    </header>
+
+    <main>
+      <!-- Overview (Popup-like) -->
+      <section id="view-overview">
+        <div class="grid">
+          <div class="card">
+            <h3>Today's Productivity</h3>
+            <div class="stat">
+              <span class="label">Productive</span
+              ><span id="productive-time" class="value">0h 0m</span>
+            </div>
+            <div class="stat">
+              <span class="label">Unproductive</span
+              ><span id="unproductive-time" class="value">0h 0m</span>
+            </div>
+            <div class="stat">
+              <span class="label">Total</span
+              ><span id="total-time" class="value">0h 0m</span>
+            </div>
+            <div class="stat">
+              <span class="label">Focus Score</span
+              ><span id="focus-score" class="value">0%</span>
+            </div>
+            <div class="controls" style="margin-top: 12px">
+              <button id="open-dashboard" class="primary">
+                Open Dashboard
+              </button>
+              <button id="reset-today">Reset Today</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Top Sites Today</h3>
+            <div id="top-sites" class="list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Dashboard -->
+      <section id="view-dashboard" style="display: none">
+        <div class="card">
+          <h3>Weekly Productivity Report</h3>
+          <canvas id="weeklyChart" height="160"></canvas>
+        </div>
+        <div class="grid">
+          <div class="card">
+            <h3>Summary</h3>
+            <p>
+              <strong>Total Productive Hours:</strong>
+              <span id="productive-hours">0</span>
+            </p>
+            <p>
+              <strong>Total Unproductive Hours:</strong>
+              <span id="unproductive-hours">0</span>
+            </p>
+            <p>
+              <strong>Focus Ratio:</strong> <span id="focus-ratio">0%</span>
+            </p>
+          </div>
+          <div class="card">
+            <h3>Domain Breakdown (Week)</h3>
+            <div id="weekly-domains" class="list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Settings -->
+      <section id="view-settings" style="display: none">
+        <div class="card">
+          <h3>Website Classification</h3>
+          <div class="controls">
+            <label>Productive Sites (comma separated)</label>
+            <textarea id="productive-sites"></textarea>
+
+            <label>Unproductive Sites (comma separated)</label>
+            <textarea id="unproductive-sites"></textarea>
+
+            <label>Idle threshold (seconds)</label>
+            <input
+              id="idle-threshold"
+              type="number"
+              min="15"
+              step="15"
+              placeholder="60"
+            />
+
+            <div style="display: flex; gap: 8px; flex-wrap: wrap">
+              <button id="save-settings" class="primary">Save</button>
+              <button id="reset-settings">Reset to Defaults</button>
+              <button id="export-data">Export Data (JSON)</button>
+              <button id="clear-data">Clear All Data</button>
+            </div>
+          </div>
+          <p class="muted" style="margin-top: 8px">
+            Tip: Domains should be like <code>github.com</code>,
+            <code>stackoverflow.com</code>, <code>youtube.com</code>.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      FocusFlow — local-first. Optional sync can be added via your backend
+      (e.g., Firebase).
+    </footer>
+
+    <script>
+      // ---------- Helpers ----------
+      const DEFAULT_CLASSIFICATION = {
+        productive: [
+          "github.com","gitlab.com","stackoverflow.com","leetcode.com",
+          "docs.google.com","notion.so","figma.com"
+        ],
+        unproductive: [
+          "facebook.com","instagram.com","twitter.com","x.com",
+          "reddit.com","youtube.com","tiktok.com","netflix.com"
+        ]
+      };
+
+      function fmt(ms) {
+        const m = Math.floor(ms / 60000);
+        const h = Math.floor(m / 60);
+        const mm = m % 60;
+        return \`\${h}h \${mm}m\`;
+      }
+
+      function sum(obj) {
+        return Object.values(obj || {}).reduce((a, b) => a + (b || 0), 0);
+      }
+
+      function todayKey(d = new Date()) {
+        return d.toISOString().slice(0, 10); // YYYY-MM-DD
+      }
+
+      function weekKeys() {
+        const keys = [];
+        const now = new Date();
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(now);
+          d.setDate(now.getDate() - i);
+          keys.push(todayKey(d));
+        }
+        return keys;
+      }
+
+      function classifyDomain(domain, productive, unproductive) {
+        if (productive.includes(domain)) return "productive";
+        if (unproductive.includes(domain)) return "unproductive";
+        return "neutral";
+      }
+
+      async function getSettings() {
+        const { classification, idleThresholdSeconds } = await chrome.storage.local.get(["classification","idleThresholdSeconds"]);
+        return {
+          productive: classification?.productive || DEFAULT_CLASSIFICATION.productive,
+          unproductive: classification?.unproductive || DEFAULT_CLASSIFICATION.unproductive,
+          idleThresholdSeconds: idleThresholdSeconds || 60
+        };
+      }
+
+      async function getTimeData() {
+        const { timeData = {} } = await chrome.storage.local.get("timeData");
+        return timeData;
+      }
+
+      // ---------- Navigation ----------
+      const navButtons = document.querySelectorAll("nav button");
+      const views = {
+        overview: document.getElementById("view-overview"),
+        dashboard: document.getElementById("view-dashboard"),
+        settings: document.getElementById("view-settings")
+      };
+
+      navButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+          navButtons.forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          const view = btn.dataset.view;
+          Object.keys(views).forEach(k => views[k].style.display = (k === view) ? "" : "none");
+          if (view === "dashboard") renderDashboard();
+          if (view === "overview") renderOverview();
+          if (view === "settings") renderSettings();
+        });
+      });
+
+      // ---------- Overview ----------
+      async function renderOverview() {
+        const settings = await getSettings();
+        const timeData = await getTimeData();
+        const today = todayKey();
+
+        const todayData = timeData[today] || {};
+        let prodMs = 0, unprodMs = 0, totalMs = 0;
+
+        Object.entries(todayData).forEach(([domain, ms]) => {
+          const cls = classifyDomain(domain, settings.productive, settings.unproductive);
+          totalMs += ms;
+          if (cls === "productive") prodMs += ms;
+          else if (cls === "unproductive") unprodMs += ms;
+        });
+
+        document.getElementById("productive-time").textContent = fmt(prodMs);
+        document.getElementById("unproductive-time").textContent = fmt(unprodMs);
+        document.getElementById("total-time").textContent = fmt(totalMs);
+        const focus = totalMs ? Math.round((prodMs / totalMs) * 100) : 0;
+        document.getElementById("focus-score").textContent = focus + "%";
+
+        // Top sites list
+        const top = Object.entries(todayData)
+          .sort((a,b) => b[1] - a[1])
+          .slice(0, 8);
+
+        const container = document.getElementById("top-sites");
+        container.innerHTML = "";
+        top.forEach(([domain, ms]) => {
+          const cls = classifyDomain(domain, settings.productive, settings.unproductive);
+          const badgeClass = cls === "productive" ? "good" : (cls === "unproductive" ? "bad" : "");
+          const el = document.createElement("div");
+          el.className = "list-item";
+          el.innerHTML = \`
+            <span>\${domain}</span>
+            <span>
+              <span class="badge \${badgeClass}">\${cls}</span>
+              <span style="margin-left:8px;" class="muted">\${fmt(ms)}</span>
+            </span>\`;
+          container.appendChild(el);
+        });
+      }
+
+      document.getElementById("open-dashboard").addEventListener("click", () => {
+        document.querySelector('nav button[data-view="dashboard"]').click();
+      });
+
+      document.getElementById("reset-today").addEventListener("click", async () => {
+        const timeData = await getTimeData();
+        const today = todayKey();
+        timeData[today] = {};
+        await chrome.storage.local.set({ timeData });
+        renderOverview();
+      });
+
+      // ---------- Dashboard ----------
+      let weeklyChart;
+      async function renderDashboard() {
+        const settings = await getSettings();
+        const timeData = await getTimeData();
+        const keys = weekKeys();
+
+        const prodSeries = [];
+        const unprodSeries = [];
+        let prodTotal = 0, unprodTotal = 0;
+
+        keys.forEach(k => {
+          const day = timeData[k] || {};
+          let p = 0, u = 0;
+          Object.entries(day).forEach(([domain, ms]) => {
+            const cls = classifyDomain(domain, settings.productive, settings.unproductive);
+            if (cls === "productive") p += ms;
+            else if (cls === "unproductive") u += ms;
+          });
+          prodSeries.push(Math.round(p / 3600000 * 100) / 100); // hours
+          unprodSeries.push(Math.round(u / 3600000 * 100) / 100);
+          prodTotal += p; unprodTotal += u;
+        });
+
+        // Chart
+        const ctx = document.getElementById("weeklyChart").getContext("2d");
+        if (weeklyChart) weeklyChart.destroy();
+        weeklyChart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: keys.map(k => k.slice(5)),
+            datasets: [
+              { label: "Productive (h)", data: prodSeries, backgroundColor: "rgba(34,197,94,0.6)" },
+              { label: "Unproductive (h)", data: unprodSeries, backgroundColor: "rgba(239,68,68,0.6)" }
+            ]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: { grid: { color: "rgba(255,255,255,0.06)" }, ticks: { color: "#9ca3af" } },
+              y: { grid: { color: "rgba(255,255,255,0.06)" }, ticks: { color: "#9ca3af" } }
+            },
+            plugins: {
+              legend: { labels: { color: "#e5e7eb" } }
+            }
+          }
+        });
+
+        // Summary
+        const prodH = Math.round(prodTotal / 3600000 * 100) / 100;
+        const unprodH = Math.round(unprodTotal / 3600000 * 100) / 100;
+        document.getElementById("productive-hours").textContent = prodH;
+        document.getElementById("unproductive-hours").textContent = unprodH;
+        const ratio = (prodTotal + unprodTotal) ? Math.round(prodTotal / (prodTotal + unprodTotal) * 100) : 0;
+        document.getElementById("focus-ratio").textContent = ratio + "%";
+
+        // Weekly domain breakdown
+        const weeklyAgg = {};
+        keys.forEach(k => {
+          const day = timeData[k] || {};
+          Object.entries(day).forEach(([domain, ms]) => {
+            weeklyAgg[domain] = (weeklyAgg[domain] || 0) + ms;
+          });
+        });
+        const sorted = Object.entries(weeklyAgg).sort((a,b) => b[1] - a[1]).slice(0, 12);
+        const container = document.getElementById("weekly-domains");
+        container.innerHTML = "";
+        sorted.forEach(([domain, ms]) => {
+          const cls = classifyDomain(domain, settings.productive, settings.unproductive);
+          const badgeClass = cls === "productive" ? "good" : (cls === "unproductive" ? "bad" : "");
+          const el = document.createElement("div");
+          el.className = "list-item";
+          el.innerHTML = \`
+            <span>\${domain}</span>
+            <span>
+              <span class="badge \${badgeClass}">\${cls}</span>
+              <span style="margin-left:8px;" class="muted">\${fmt(ms)}</span>
+            </span>\`;
+          container.appendChild(el);
+        });
+      }
+
+      // ---------- Settings ----------
+      async function renderSettings() {
+        const settings = await getSettings();
+        document.getElementById("productive-sites").value = settings.productive.join(", ");
+        document.getElementById("unproductive-sites").value = settings.unproductive.join(", ");
+        document.getElementById("idle-threshold").value = settings.idleThresholdSeconds;
+      }
+
+      document.getElementById("save-settings").addEventListener("click", async () => {
+        const productive = document.getElementById("productive-sites").value
+          .split(",").map(s => s.trim()).filter(Boolean);
+        const unproductive = document.getElementById("unproductive-sites").value
+          .split(",").map(s => s.trim()).filter(Boolean);
+        const idleThresholdSeconds = parseInt(document.getElementById("idle-threshold").value || "60", 10);
+
+        await chrome.storage.local.set({
+          classification: { productive, unproductive },
+          idleThresholdSeconds
+        });
+        renderOverview();
+        alert("Settings saved.");
+      });
+
+      document.getElementById("reset-settings").addEventListener("click", async () => {
+        await chrome.storage.local.set({
+          classification: DEFAULT_CLASSIFICATION,
+          idleThresholdSeconds: 60
+        });
+        renderSettings();
+        alert("Settings reset to defaults.");
+      });
+
+      document.getElementById("export-data").addEventListener("click", async () => {
+        const timeData = await getTimeData();
+        const blob = new Blob([JSON.stringify(timeData, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = "focusflow_time_data.json"; a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      document.getElementById("clear-data").addEventListener("click", async () => {
+        if (!confirm("Clear all tracked time data?")) return;
+        await chrome.storage.local.set({ timeData: {} });
+        renderOverview();
+        alert("All data cleared.");
+      });
+
+      // ---------- Init ----------
+      (async function init() {
+        renderOverview();
+      })();
+    </script>
+  </body>
+</html>
