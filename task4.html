@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>TimeTracking and ProductivityAnalytics</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        --bg: #1a253d;
+        --card: #111827;
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --accent: #04742d;
+        --border: #354863;
+      }
+      body {
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
+          Arial, sans-serif;
+        background: linear-gradient(180deg, #293753, #4f68a1);
+        color: var(--text);
+      }
+      .container {
+        max-width: 1000px;
+        margin: 32px auto;
+        padding: 0 15px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+      .title {
+        font-weight: 700;
+        font-size: 1.25rem;
+        letter-spacing: 0.2px;
+      }
+      .badge {
+        background: rgba(34, 197, 94, 0.15);
+        color: var(--accent);
+        border: 1px solid rgba(77, 158, 107, 0.35);
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.95rem;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 16px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .card header {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+        font-weight: 600;
+      }
+      .card .content {
+        padding: 12px 16px;
+      }
+      .tabs-list {
+        list-style: none;
+        margin: 0;
+      }
+      .tab-item {
+        display: grid;
+        grid-template-columns: 24px 1fr auto;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        margin-bottom: 10px;
+        background: #0d1424;
+      }
+      .tab-item.current {
+        border-color: rgba(34, 197, 94, 0.5);
+        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15) inset;
+      }
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--muted);
+      }
+      .tab-item.current .dot {
+        background: var(--accent);
+      }
+      .tab-title {
+        font-weight: 600;
+      }
+      .tab-url {
+        font-size: 0.85rem;
+        color: var(--muted);
+        word-break: break-all;
+      }
+      .tab-meta {
+        text-align: right;
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+      iframe {
+        width: 100%;
+        height: 420px;
+        border: 0;
+        background: #0b1220;
+      }
+      .controls {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .btn {
+        background: #0b1220;
+        border: 1px solid var(--border);
+        color: var(--text);
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .btn.primary {
+        background: rgba(34, 197, 94, 0.15);
+        border-color: rgba(34, 197, 94, 0.35);
+        color: var(--accent);
+      }
+      .footer {
+        margin-top: 16px;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="title">FocusFlow — Time Tracking & Productivity</div>
+        <div class="badge">Live session</div>
+      </header>
+
+      <div class="grid">
+        <!-- Left: Tabs overview -->
+        <section class="card">
+          <header>Open Edge tabs</header>
+          <div class="content">
+            <ul id="tabs" class="tabs-list"></ul>
+            <div class="footer">
+              Current tab is highlighted with a green dot and border.
+            </div>
+          </div>
+        </section>
+
+        <!-- Right: FocusFlow popup embed -->
+        <section class="card">
+          <header>FocusFlow popup</header>
+          <div class="content">
+            <div class="controls">
+              <button class="btn primary" id="start">Start focus</button>
+              <button class="btn" id="pause">Pause</button>
+              <button class="btn" id="reset">Reset</button>
+            </div>
+            <iframe
+              title="FocusFlow Stats"
+              src="http://127.0.0.1/popup.html"
+              allow="clipboard-read; clipboard-write"
+            ></iframe>
+            <div class="footer">
+              Embedded popup shows timers, sessions, and productivity stats.
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      // Example: Edge tabs metadata provided by the session
+      const edge_all_open_tabs = [
+        {
+          pageTitle: "FocusFlow Stats",
+          pageUrl: "http://127.0.0.1/popup.html",
+          tabId: 749885345,
+          isCurrent: true,
+        },
+        {
+          pageTitle: "Live Chat",
+          pageUrl: "http://127.0.0.1/livechat.html",
+          tabId: 749885292,
+          isCurrent: false,
+        },
+        {
+          pageTitle: "Live Chat",
+          pageUrl: "http://127.0.0.1/live.html",
+          tabId: 749885342,
+          isCurrent: false,
+        },
+        {
+          pageTitle: "127.0.0.1:5500/document.html",
+          pageUrl: "http://127.0.0.1/document.html",
+          tabId: 749885343,
+          isCurrent: false,
+        },
+        {
+          pageTitle: "doc.html",
+          pageUrl: "file://D:/gopika/html/doc.html",
+          tabId: 749885344,
+          isCurrent: false,
+        },
+      ];
+
+      const list = document.getElementById("tabs");
+
+      function renderTabs(tabs) {
+        list.innerHTML = "";
+        tabs.forEach((tab) => {
+          const li = document.createElement("li");
+          li.className = "tab-item" + (tab.isCurrent ? " current" : "");
+          li.innerHTML = `
+          <span class="dot" aria-hidden="true"></span>
+          <div>
+            <div class="tab-title">${tab.pageTitle}</div>
+            <div class="tab-url">${tab.pageUrl}</div>
+          </div>
+          <div class="tab-meta">Tab ID: ${tab.tabId}</div>
+        `;
+          list.appendChild(li);
+        });
+      }
+
+      renderTabs(edge_all_open_tabs);
+
+      // Demo controls (no real tracking logic—wire these to your extension APIs)
+      const startBtn = document.getElementById("start");
+      const pauseBtn = document.getElementById("pause");
+      const resetBtn = document.getElementById("reset");
+
+      startBtn.addEventListener("click", () => {
+        startBtn.textContent = "Focusing…";
+        startBtn.disabled = true;
+        pauseBtn.disabled = false;
+      });
+
+      pauseBtn.addEventListener("click", () => {
+        startBtn.textContent = "Resume focus";
+        startBtn.disabled = false;
+        pauseBtn.disabled = true;
+      });
+
+      resetBtn.addEventListener("click", () => {
+        startBtn.textContent = "Start focus";
+        startBtn.disabled = false;
+        pauseBtn.disabled = false;
+      });
+    </script>
+  </body>
+</html>
