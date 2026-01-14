@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link
+      href="https://cdn.quilljs.com/1.3.6/quill.snow.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        color: aqua;
+        align-items: center;
+      }
+      #editor {
+        height: 300px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="editor"></div>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+      const docId = "doc-123";
+      const socket = io("https://your-server.example.com", {
+        transports: ["websocket"],
+      });
+      const quill = new Quill("#editor", { theme: "snow" });
+      socket.emit("joinDoc", { docId });
+      quill.on("text-change", (delta, oldDelta, source) => {
+        if (source === "user") {
+          socket.emit("op", { docId, delta });
+        }
+      });
+      socket.on("op", ({ delta }) => {
+        quill.updateContents(delta, "api");
+      });
+      quill.on("selection-change", (range) => {
+        socket.emit("cursor", { docId, range });
+      });
+    </script>
+  </body>
+</html>
